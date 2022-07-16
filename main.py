@@ -92,10 +92,13 @@ for epoch in range(config.parameter['epochs']):
     metrics_name  = ['Recall',"F1-score","Accuracy","Loss"]
 
     for col in zip(metrics_name,train_metrics,val_metrics):
-        col = list(col)
-        table.add_row(col)
+        table.add_row(*col)
     console.print(table)
     console.log(f"Epoch {epoch + 1} end ...")
     network.train()
+
+console.log("Save Log ...")
+train_log.to_csv("./log/train_log.csv")
+val_log.to_csv("./log/val_log.csv")
 
         

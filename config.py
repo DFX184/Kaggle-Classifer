@@ -1,6 +1,6 @@
 from rich import print
 parameter = {
-    "ROOT": r"J:\dataset",
+    "ROOT": r"D:\dataset",
     "dataset_csv": r"train.csv",
     "batch_size": 32,
     "device" : "cuda:0",

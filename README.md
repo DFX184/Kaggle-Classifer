@@ -24,15 +24,6 @@ Below are the versions of `opencv-python`, `torch`, `torchvision`, `rich`, `warm
 * `warmup_scheduler` : 0.3.2 
 * `numpy` : 1.20.0 
 
-Download link:
-
-* `opencv-python` : 4.5.5.64 
-* `torch` : 1.10.0+cu102  
-* `torchvision` : 0.11.0+cu102 
-* `rich` : 10.16.2   
-* `warmup_scheduler` : 0.3.2  
-* `numpy` : 1.20.0 
-
 Install **rich**  and **warmup_scheduler** 
 
 ```shell

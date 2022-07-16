@@ -22,7 +22,7 @@ class ClassificationLog(object):
         self.sum_acc  = 0.0
         self.sum_loss = 0.0
         self.sum_f1 = 0.0
-        self.n  = 0 
+        self.n  = 1 
     
     def Average(self):
         return [
