@@ -3,7 +3,7 @@ parameter = {
     "ROOT": r"/mnt/d/dataset",
     "dataset_csv": r"train.csv",
     "batch_size": 32,
-    "device" : "cuda:0",
+    "num_workers" : 8,
     "learning_rate" : 1e-3,
     "val_size" : 0.2,
     "seed" : 12,

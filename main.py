@@ -15,13 +15,17 @@ console = Console()
 from rich.progress import track
 from rich.table import Column, Table
 from tqdm import tqdm
-device = torch.device(config.parameter["device"])
-console.log(f"Use device {device}")
+from accelerate import Accelerator
+
+accelerator = Accelerator()
+
+# device = torch.device(config.parameter["device"])
+console.log(f"Use device {accelerator.device}")
 
 ## network
 network = tony_net.TonyNet(config.parameter["in_channel"],
                             config.parameter["num_classes"])
-network = network.to(device)
+# network = network.to(device)
 
 train_log = utils.ClassificationLog("Train Log")
 val_log = utils.ClassificationLog("Val Log")
@@ -37,14 +41,14 @@ scheduler_warmup = GradualWarmupScheduler(
     optimizer, multiplier=1,
     total_epoch=config.parameter['epochs'], 
     after_scheduler=scheduler_steplr)
-
+network, optimizer, train_loader,val_loader = accelerator.prepare(network, optimizer, train_loader,val_loader)
 
 
 for epoch in range(config.parameter['epochs']):
     bar  =tqdm(train_loader,desc=f"Training Epoch : {epoch + 1} ") #track(train_loader,description=f"[blod red]Training Epoch : {epoch + 1} ")
     for img,label in bar:
-        img = img.to(device)
-        label = label.to(device)
+        #img = img.to(device)
+        #label = label.to(device)
         out   = network(img)
         loss  = lossfunction(out,label)
         predict =  utils.to_numpy(out.argmax(dim = -1))
@@ -59,7 +63,8 @@ for epoch in range(config.parameter['epochs']):
         )
 
         optimizer.zero_grad()
-        loss.backward()
+        #loss.backward()
+        accelerator.backward(loss)
         optimizer.step()
     scheduler_warmup.step()
 

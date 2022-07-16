@@ -2,12 +2,22 @@ import torch
 import pandas as pd
 import config
 import torch.nn as nn
-from torch.utils.data import Dataset,DataLoader,random_split
+from torch.utils.data import Dataset,DataLoader,random_split,TensorDataset
 from rich import print
 from PIL import Image
 import os
 import cv2 as cv
 from sklearn.preprocessing import LabelEncoder
+from rich.console import Console
+console = Console()
+from rich.progress import track
+from rich.table import Column, Table
+from torchvision import transforms
+from prefetch_generator import BackgroundGenerator
+
+class DataLoaderX(DataLoader):
+    def __iter__(self):
+        return BackgroundGenerator(super().__iter__())
 
 class ImageDataset(Dataset):
     def __init__(self,root,df,transform = None,label_func = None):
@@ -22,8 +32,8 @@ class ImageDataset(Dataset):
         
     def __getitem__(self,index):
         path= os.path.join(self.root,self.images[index])
-        img = cv.imread(path)
-        img = Image.fromarray(img)
+        #img = cv.imread(path)
+        img = Image.open(path)
         label = self.labels[index]
         if not(self.transform is None):
             img = self.transform(img)
@@ -31,6 +41,7 @@ class ImageDataset(Dataset):
     
     def __len__(self):
         return len(self.labels)
+
 
 
 def create_dataloader(label_func = None,transform=None):
@@ -46,8 +57,14 @@ def create_dataloader(label_func = None,transform=None):
 
     train_set,val_set = random_split(dataset,lengths = [len(dataset) - test_size,test_size],
                                         generator=torch.Generator().manual_seed(config.parameter['seed']))
-    train_loader = DataLoader(train_set,shuffle=True,batch_size =config.parameter['batch_size'],num_workers = 8,pin_memory=True)
-    val_loader   = DataLoader(val_set,shuffle=True,batch_size=config.parameter['batch_size'],num_workers = 8,pin_memory=True)
+    train_loader = DataLoaderX(train_set,shuffle=True,
+                                batch_size =config.parameter['batch_size'],
+                                num_workers = config.parameter['num_workers'],
+                                pin_memory=True)
+    val_loader   = DataLoaderX(val_set,shuffle=True,
+                                batch_size=config.parameter['batch_size'],
+                                num_workers = config.parameter['num_workers'],
+                                pin_memory=True)
     return train_loader,val_loader
 
 if __name__ == "__main__":
