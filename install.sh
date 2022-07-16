@@ -2,7 +2,9 @@
 
 echo "Installing Anaconda"
 
-wget https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-x86_64.sh
+if [ !-e "Anaconda3-2022.05-Linux-x86_64.sh" ];then
+    wget https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-x86_64.sh
+fi
 bash Anaconda3-2022.05-Linux-x86_64.sh
 rm Anaconda3-2022.05-Linux-x86_64.sh
 
@@ -23,6 +25,7 @@ fi
 pip3 install opencv-python
 pip3 install rich
 pip3 install git+https://github.com/ildoonet/pytorch-gradual-warmup-lr.git
+
 pip3 install accelerate
 pip3 install prefetch_generator 
 pip3 install -U albumentations
