@@ -3,7 +3,7 @@ import torch.nn as nn
 import utils
 import torch
 import numpy as np
-from models import densenet
+from models import densenet,tony_net
 from rich import print
 import vision_transforms
 from torch.optim.lr_scheduler import StepLR, ExponentialLR
@@ -14,12 +14,12 @@ from rich.console import Console
 console = Console()
 from rich.progress import track
 from rich.table import Column, Table
-
+from tqdm import tqdm
 device = torch.device(config.parameter["device"])
 console.log(f"Use device {device}")
 
 ## network
-network = densenet.DenseNet(config.parameter["in_channel"],
+network = tony_net.TonyNet(config.parameter["in_channel"],
                             config.parameter["num_classes"])
 network = network.to(device)
 
@@ -41,8 +41,8 @@ scheduler_warmup = GradualWarmupScheduler(
 
 
 for epoch in range(config.parameter['epochs']):
-    
-    for img,label in track(train_loader,description=f"[blod red]Training Epoch : {epoch + 1} "):
+    bar  =tqdm(train_loader,desc=f"Training Epoch : {epoch + 1} ") #track(train_loader,description=f"[blod red]Training Epoch : {epoch + 1} ")
+    for img,label in bar:
         img = img.to(device)
         label = label.to(device)
         out   = network(img)
@@ -64,7 +64,8 @@ for epoch in range(config.parameter['epochs']):
     scheduler_warmup.step()
 
     network.eval()
-    for img,label in track(val_loader,description=f"[blod red]Testing Epoch : {epoch + 1} "):
+    bar = tqdm(val_loader,desc=f"Testing Epoch : {epoch + 1} ") #track(val_loader,description=f"[blod red]Testing Epoch : {epoch + 1} ")
+    for img,label in bar:
         img = img.to(device)
         label = label.to(device)
         out   = network(img)
