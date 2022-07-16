@@ -1,4 +1,5 @@
 from rich import print
+
 parameter = {
     "ROOT": r"/mnt/d/dataset",
     "dataset_csv": r"train.csv",
@@ -10,7 +11,8 @@ parameter = {
     "epochs":10,
     "num_classes" : 12,
     "in_channel" : 3,
-    "image_size" : (128,128)
+    "image_size" : (128,128),
+    "save_model" : "res_net"
 }
 
 

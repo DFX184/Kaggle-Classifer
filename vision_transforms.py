@@ -18,7 +18,6 @@ transform_tensor = transforms.Compose([
 
 ## Add new transform to below
 
-
 ### transform_1
 image_size = config.parameter["image_size"]
 transform_1 = Compose([

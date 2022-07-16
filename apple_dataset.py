@@ -14,6 +14,7 @@ from rich.progress import track
 from rich.table import Column, Table
 from torchvision import transforms
 from prefetch_generator import BackgroundGenerator
+import jpeg4py as jpeg
 
 class DataLoaderX(DataLoader):
     def __iter__(self):
@@ -33,7 +34,8 @@ class ImageDataset(Dataset):
     def __getitem__(self,index):
         path= os.path.join(self.root,self.images[index])
         #img = cv.imread(path)
-        img = Image.open(path)
+        img = jpeg.JPEG(path).decode()
+        img = Image.fromarray(img)
         label = self.labels[index]
         if not(self.transform is None):
             img = self.transform(img)

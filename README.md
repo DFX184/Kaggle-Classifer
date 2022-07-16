@@ -38,7 +38,11 @@ pip install rich
 pip install accelerate
 pip install prefetch_generator 
 pip install -U albumentations
+sudo apt-get install libturbojpeg
+pip install -U jpeg4py
 ```
+
+or you can use `install.sh` to configure
 
 # Custom Model
 
