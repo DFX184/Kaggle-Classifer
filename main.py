@@ -1,6 +1,7 @@
 import config
 import torch.nn as nn
 import utils
+import os
 import torch
 import numpy as np
 from models import densenet,tony_net,resnet
@@ -16,6 +17,8 @@ from rich.progress import track
 from rich.table import Column, Table
 from tqdm import tqdm
 from accelerate import Accelerator
+from sklearn.metrics import confusion_matrix
+
 
 accelerator = Accelerator()
 
@@ -44,6 +47,11 @@ scheduler_warmup = GradualWarmupScheduler(
 network, optimizer, train_loader,val_loader = accelerator.prepare(network, optimizer, train_loader,val_loader)
 
 
+if not(os.path.exists("./log")):
+    os.mkdir("./log")
+    os.mkdir("./log/models/")
+
+best_acc = 0.0
 for epoch in range(config.parameter['epochs']):
     bar  =tqdm(train_loader,desc=f"Training Epoch : {epoch + 1} ") #track(train_loader,description=f"[blod red]Training Epoch : {epoch + 1} ")
     for img,label in bar:
@@ -69,6 +77,8 @@ for epoch in range(config.parameter['epochs']):
     scheduler_warmup.step()
 
     network.eval()
+    trues = []
+    predicts = []
     bar = tqdm(val_loader,desc=f"Testing Epoch : {epoch + 1} ") #track(val_loader,description=f"[blod red]Testing Epoch : {epoch + 1} ")
     for img,label in bar:
         # img = img.to(device)
@@ -77,6 +87,8 @@ for epoch in range(config.parameter['epochs']):
         loss  = lossfunction(out,label)
         predict =  utils.to_numpy(out.argmax(dim = -1))
         true    =  utils.to_numpy(label)
+        predicts += predict.tolist()
+        trues += true.tolist()
 
         (recall,f1,accuracy) = utils.compute_metrics(true,predict)
         val_log.update(
@@ -86,12 +98,15 @@ for epoch in range(config.parameter['epochs']):
             loss.item()
         )
 
+    matrix = confusion_matrix(trues,predicts)
+
     table = Table(show_header=True, header_style="bold magenta")
     table.add_column("Metrics", style="dim", width=12)
     table.add_column(f"Train (Epoch = {epoch + 1})",justify="right")
     table.add_column(f"Val (Epoch = {epoch + 1})",justify="right")
 
     val_metrics = val_log.Average()
+    
     train_metrics= train_log.Average()
     val_metrics = list(map(lambda x : str(round(x,5)),val_metrics))
     train_metrics = list(map(lambda x : str(round(x,5)),train_metrics))
@@ -100,8 +115,14 @@ for epoch in range(config.parameter['epochs']):
     for col in zip(metrics_name,train_metrics,val_metrics):
         table.add_row(*col)
     console.print(table)
+    console.print("-"*30)
+    console.print("confusion_matrix")
+    console.print(matrix)
     console.log(f"Epoch {epoch + 1} end ...")
     network.train()
+    if val_metrics[2] > best_acc:
+        best_acc = val_metrics[2]
+        torch.save(network.state_dict(),f"./log/models/best_model.pth",)
 
 console.log("Save Log ...")
 train_log.to_csv("./log/train_log.csv")

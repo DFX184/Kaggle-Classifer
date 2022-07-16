@@ -6,7 +6,7 @@ import config
 import pandas as pd
 from rich import print
 import numpy as np
-from sklearn.metrics import f1_score,accuracy_score,recall_score
+from sklearn.metrics import f1_score,accuracy_score,recall_score,confusion_matrix
 
 
 class ClassificationLog(object):
@@ -63,3 +63,16 @@ def compute_metrics(true,predict):
     return(recall_score(true,predict,average = "weighted",labels=labels,zero_division=0),
            f1_score(true,predict,average = "weighted",labels=labels,zero_division=0),
            accuracy_score(true,predict))
+
+def compute_confusion_matrix(model,loader):
+    model.eval()
+    predicts = []
+    true = []
+    for img,label in loader:
+        out = model(img)
+        predict = out.argmax(dim = -1)
+        predict = to_numpy(predict).tolist()
+        predicts += predict
+        true += to_numpy(label).tolist()
+    return confusion_matrix(true,predict)
+
