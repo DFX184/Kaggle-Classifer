@@ -30,13 +30,14 @@ Below are the versions of `opencv-python`, `torch`, `torchvision`, `rich`, `warm
 * `warmup_scheduler` : 0.3.2 
 * `numpy` : 1.20.0 
 
-Install **rich** **accelerate** **DataLoaderX** and **warmup_scheduler** 
+Install **rich** **accelerate** **DataLoaderX** **albumentations** and **warmup_scheduler** 
 
 ```shell
 pip install git+https://github.com/ildoonet/pytorch-gradual-warmup-lr.git
 pip install rich
 pip install accelerate
 pip install prefetch_generator 
+pip install -U albumentations
 ```
 
 # Custom Model

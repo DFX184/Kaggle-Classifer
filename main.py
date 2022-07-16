@@ -3,7 +3,7 @@ import torch.nn as nn
 import utils
 import torch
 import numpy as np
-from models import densenet,tony_net
+from models import densenet,tony_net,resnet
 from rich import print
 import vision_transforms
 from torch.optim.lr_scheduler import StepLR, ExponentialLR
@@ -23,7 +23,7 @@ accelerator = Accelerator()
 console.log(f"Use device {accelerator.device}")
 
 ## network
-network = tony_net.TonyNet(config.parameter["in_channel"],
+network = resnet.ResNet18(config.parameter["in_channel"],
                             config.parameter["num_classes"])
 # network = network.to(device)
 
@@ -71,8 +71,8 @@ for epoch in range(config.parameter['epochs']):
     network.eval()
     bar = tqdm(val_loader,desc=f"Testing Epoch : {epoch + 1} ") #track(val_loader,description=f"[blod red]Testing Epoch : {epoch + 1} ")
     for img,label in bar:
-        img = img.to(device)
-        label = label.to(device)
+        # img = img.to(device)
+        # label = label.to(device)
         out   = network(img)
         loss  = lossfunction(out,label)
         predict =  utils.to_numpy(out.argmax(dim = -1))

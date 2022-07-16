@@ -9,7 +9,8 @@ parameter = {
     "seed" : 12,
     "epochs":10,
     "num_classes" : 12,
-    "in_channel" : 3
+    "in_channel" : 3,
+    "image_size" : (128,128)
 }
 
 
