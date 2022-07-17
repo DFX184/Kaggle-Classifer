@@ -43,7 +43,7 @@ console.log(f"Use device {accelerator.device}")
 
 if __name__ == "__main__":
     ## network
-    network = densenet.DenseNet(config.parameter["in_channel"],
+    network = resnet.ResNet18(config.parameter["in_channel"],
                                 config.parameter["num_classes"])
     # network = network.to(device)
 
@@ -139,7 +139,7 @@ if __name__ == "__main__":
         network.train()
         if float(val_metrics[2]) > best_acc:
             best_acc = float(val_metrics[2])
-            torch.save(network.state_dict(),f"./log/models/{config.paramters['save_model']}.pth",)
+            torch.save(network.state_dict(),f"./log/models/{config.parameter['save_model']}.pth",)
 
     console.log("Save Log ...")
     train_log.to_csv("./log/train_log.csv")
