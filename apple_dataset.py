@@ -35,10 +35,10 @@ class ImageDataset(Dataset):
         path= os.path.join(self.root,self.images[index])
         #img = cv.imread(path)
         img = jpeg.JPEG(path).decode()
-        img = Image.fromarray(img)
+        #img = Image.fromarray(img)
         label = self.labels[index]
         if not(self.transform is None):
-            img = self.transform(img)
+            img = self.transform(image = img)['image']
         return img,label
     
     def __len__(self):

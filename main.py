@@ -49,7 +49,7 @@ if __name__ == "__main__":
 
     train_log = utils.ClassificationLog("Train Log")
     val_log = utils.ClassificationLog("Val Log")
-    transform = vision_transforms.transform_tensor
+    transform = vision_transforms.transform_2
 
     train_loader, val_loader = ap.create_dataloader(None, transform)
     console.log("Use parameters as following:",config.parameter)
@@ -92,7 +92,7 @@ if __name__ == "__main__":
             accelerator.backward(loss)
             optimizer.step()
         scheduler_warmup.step()
-
+    
         network.eval()
         trues = []
         predicts = []
@@ -116,7 +116,7 @@ if __name__ == "__main__":
             )
 
         matrix = confusion_matrix(trues,predicts)
-
+        val_log.update_confusion_matrix(matrix)
         table = Table(show_header=True, header_style="bold magenta")
         table.add_column("Metrics", style="dim", width=12)
         table.add_column(f"Train (Epoch = {epoch + 1})",justify="right")
