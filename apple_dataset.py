@@ -38,8 +38,8 @@ class ImageDataset(Dataset):
 
         img = jpeg.JPEG(path).decode()
        # img  = torchvision.io.read_image(path).numpy()
-        img  = np.transpose(img,(2,1,0))
-        img = Image.fromarray(img)
+        #img  = np.transpose(img,(2,1,0))
+        #img = Image.fromarray(img)
         label = self.labels[index]
         if not(self.transform is None):
             img = self.transform(image = img)['image']
