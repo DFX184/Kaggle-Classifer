@@ -15,7 +15,8 @@ from rich.table import Column, Table
 from torchvision import transforms
 from prefetch_generator import BackgroundGenerator
 import jpeg4py as jpeg
-
+import torchvision
+import numpy as np
 class DataLoaderX(DataLoader):
     def __iter__(self):
         return BackgroundGenerator(super().__iter__())
@@ -34,8 +35,11 @@ class ImageDataset(Dataset):
     def __getitem__(self,index):
         path= os.path.join(self.root,self.images[index])
         #img = cv.imread(path)
+
         img = jpeg.JPEG(path).decode()
-        #img = Image.fromarray(img)
+       # img  = torchvision.io.read_image(path).numpy()
+        img  = np.transpose(img,(2,1,0))
+        img = Image.fromarray(img)
         label = self.labels[index]
         if not(self.transform is None):
             img = self.transform(image = img)['image']

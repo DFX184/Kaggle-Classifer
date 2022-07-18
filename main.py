@@ -4,7 +4,7 @@ import utils
 import os
 import torch
 import numpy as np
-from models import densenet,tony_net,resnet
+from models import densenet,tony_net,resnet,effectNet
 from rich import print
 import vision_transforms
 from torch.optim.lr_scheduler import StepLR, ExponentialLR
@@ -43,7 +43,7 @@ console.log(f"Use device {accelerator.device}")
 
 if __name__ == "__main__":
     ## network
-    network = resnet.ResNet18(config.parameter["in_channel"],
+    network = effectNet.EffectNet(config.parameter["in_channel"],
                                 config.parameter["num_classes"])
     # network = network.to(device)
 
