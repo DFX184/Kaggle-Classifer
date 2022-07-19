@@ -33,7 +33,7 @@ class ClassificationLog(object):
             self.sum_loss/self.n
         ]
     def update_confusion_matrix(self,m):
-        self.confusion_matrix = np.copu(m)
+        self.confusion_matrix = np.copy(m)
     def update(self,recall,f1,accuracy,loss):
         self.sum_recall += recall
         self.sum_f1 += f1
@@ -47,8 +47,8 @@ class ClassificationLog(object):
     
     def to_csv(self,name):
         pd.DataFrame(self.history).to_csv(name,index = None)
-        if not(self.confusion_matrix is None ):
-            np.save(f"{name.split('.')[0]}.npy",self.confusion_matrix)
+#         if not(self.confusion_matrix is None ):
+#             np.save(f"{name.split('.')[0]}.npy",self.confusion_matrix)
     def __str__(self):
         return self.name
     
