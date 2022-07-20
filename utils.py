@@ -47,8 +47,8 @@ class ClassificationLog(object):
     
     def to_csv(self,name):
         pd.DataFrame(self.history).to_csv(name,index = None)
-#         if not(self.confusion_matrix is None ):
-#             np.save(f"{name.split('.')[0]}.npy",self.confusion_matrix)
+        if not(self.confusion_matrix is None ):
+            np.save(f"{name.split('.')[0]}.npy",self.confusion_matrix)
     def __str__(self):
         return self.name
     

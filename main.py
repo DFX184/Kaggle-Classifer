@@ -18,6 +18,7 @@ from rich.table import Column, Table
 from accelerate import Accelerator
 from sklearn.metrics import confusion_matrix
 import random
+import lossfunc
 ######################################################
 #                                                    #
 #                                                    #
@@ -53,7 +54,7 @@ if __name__ == "__main__":
 
     train_loader, val_loader = ap.create_dataloader(None, transform)
     console.log("Use parameters as following:",config.parameter)
-    lossfunction = nn.CrossEntropyLoss()
+    lossfunction = lossfunc.FocalLoss() #nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(
         network.parameters(), lr=config.parameter['learning_rate'])
     scheduler_steplr = StepLR(optimizer, step_size=int(0.2 * config.parameter['epochs']), gamma=0.1)

@@ -1,11 +1,22 @@
+<div align = "center">
+    <h1 font-size = 30> 
+        <font color = "pink">Plant Pathology 2021 - FGVC8</font>
+    </h1>
+</div>
+<div align = "center">
+    <h1 font-size = 20> 
+        <font color = "blue">Identify the category of foliar diseases in apple trees</font>
+    </h1>
+</div>
 
+[*Completion link*](https://www.kaggle.com/c/plant-pathology-2021-fgvc8)
 # Download Dataset
 
 **BaiDu Network Disk** 
 
 [Get Data](https://pan.baidu.com/s/1_PbKnKdeade9JIIgGvxr7A)
 
-**keyward** `kwj4` 
+**passward** `kwj4` 
 
 if you have downloaded the dataset,the document structure should be as follows:
 
@@ -18,6 +29,30 @@ if you have downloaded the dataset,the document structure should be as follows:
 ```
 
 where `../` is `ROOT` in `config.py`
+
+## Sample Data and EDA
+
+### Data
+
+There are some different classes of image as below:
+
+<div align = "center">
+    <img src = "./images/data.png" height = 700 >
+</div>
+
+### EDA
+
+#### Step 1 (**Key Step**)
+
+<div align = "center">
+    <img src = "./images/after_hist.png" height = 700>
+</div>
+
+#### Another Step
+
+<div align = "center">
+    <img src = "./images/preprocess.png" >
+</div>
 
 # SoftWare Version and Installation
 
