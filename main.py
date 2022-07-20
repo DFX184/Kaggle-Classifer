@@ -4,7 +4,7 @@ import utils
 import os
 import torch
 import numpy as np
-from models import densenet,tony_net,resnet,effectNet
+from models import densenet,tony_net,resnet,effectNet,vit
 from rich import print
 import vision_transforms
 from torch.optim.lr_scheduler import StepLR, ExponentialLR
@@ -43,13 +43,13 @@ console.log(f"Use device {accelerator.device}")
 
 if __name__ == "__main__":
     ## network
-    network = effectNet.EffectNet(config.parameter["in_channel"],
+    network = resnet.ResNet18(config.parameter["in_channel"],
                                 config.parameter["num_classes"])
     # network = network.to(device)
 
     train_log = utils.ClassificationLog("Train Log")
     val_log = utils.ClassificationLog("Val Log")
-    transform = vision_transforms.transform_2
+    transform = vision_transforms.transform_3
 
     train_loader, val_loader = ap.create_dataloader(None, transform)
     console.log("Use parameters as following:",config.parameter)

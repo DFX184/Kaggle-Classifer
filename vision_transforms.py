@@ -46,15 +46,30 @@ def histequality(img):
 
 def pil_to_numpy(array):return np.asarray(array)
 def numpy_to_pil(array):return Image.fromarray(array)   
-def tranform_hist_equality(image,**kwargs):
+def transform_hist_equality(image,**kwargs):
     img = image
     img = histequality(img)
     return img
 
 transform_2 = Compose([
-            A.Lambda(tranform_hist_equality),
+            A.Lambda(transform_hist_equality),
             A.RandomResizedCrop(height=image_size[1], width=image_size[0]),
             A.ShiftScaleRotate(p=0.5),
+            A.RandomBrightnessContrast(p=0.5),
             A.Normalize(),
             ToTensorV2(),
         ])
+
+
+transform_3 = Compose(
+    [
+        A.Lambda(transform_hist_equality),
+        A.Resize(height=256, width=256),
+        A.ShiftScaleRotate(p=0.5),
+        A.RandomBrightnessContrast(p=0.5),
+        A.CLAHE(),
+        A.CenterCrop(height = 224,width = 224),
+        A.Normalize(),
+        ToTensorV2(),
+    ]
+)
