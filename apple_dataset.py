@@ -62,12 +62,15 @@ def create_dataloader(label_func = None,transform=None):
     test_size= int(len(dataset) * config.parameter['val_size'])
 
     train_set,val_set = random_split(dataset,lengths = [len(dataset) - test_size,test_size],
-                                        generator=torch.Generator().manual_seed(config.parameter['seed']))
-    train_loader = DataLoaderX(train_set,shuffle=True,
+                                        generator=torch.Generator().manual_seed(config.parameter['seed']))                         
+    class_sample_count = [4826, 4624, 3181, 1860, 1602, 1184, 686, 200, 165, 120, 97, 87]
+    new_weights = 1 / torch.Tensor(class_sample_count)
+    sampler = torch.utils.data.sampler.WeightedRandomSampler(new_weights, config.parameter['batch_size'])
+    train_loader = DataLoaderX(train_set,shuffle=True,sampler = sampler,
                                 batch_size =config.parameter['batch_size'],
                                 num_workers = config.parameter['num_workers'],
                                 pin_memory=True)
-    val_loader   = DataLoaderX(val_set,shuffle=True,
+    val_loader   = DataLoaderX(val_set,shuffle=True,sampler = sampler,
                                 batch_size=config.parameter['batch_size'],
                                 num_workers = config.parameter['num_workers'],
                                 pin_memory=True)
