@@ -1,16 +1,17 @@
 from rich import print
 
 parameter = {
-    "ROOT": r"D:\dataset",
+    "ROOT": r"/mnt/d/dataset",
     "dataset_csv": r"train.csv",
     "batch_size": 32,
     "num_workers" : 8,
     "learning_rate" : 5e-5,
     "val_size" : 0.2,
     "seed" : 12,
-    "epochs":10,
+    "epochs":30,
     "num_classes" : 12,
     "in_channel" : 3,
+    "verbose_test" : 2, ## 
     "image_size" : (256,256),
     "save_model" : "ResNet__focal"
 }

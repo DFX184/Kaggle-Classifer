@@ -93,54 +93,55 @@ if __name__ == "__main__":
             accelerator.backward(loss)
             optimizer.step()
         scheduler_warmup.step()
-    
-        network.eval()
-        trues = []
-        predicts = []
-        bar = track(val_loader,description=f"[blod red]Testing Epoch : {epoch + 1} ")
-        for img,label in bar:
-            # img = img.to(device)
-            # label = label.to(device)
-            out   = network(img)
-            loss  = lossfunction(out,label)
-            predict =  utils.to_numpy(out.argmax(dim = -1))
-            true    =  utils.to_numpy(label)
-            predicts += predict.tolist()
-            trues += true.tolist()
+        if (epoch + 1) % config.parameter["verbose_test"] == 0:
+            network.eval()
+            trues = []
+            predicts = []
+            bar = track(val_loader,description=f"[blod red]Testing Epoch : {epoch + 1} ")
+            for img,label in bar:
+                # img = img.to(device)
+                # label = label.to(device)
+                out   = network(img)
+                loss  = lossfunction(out,label)
+                predict =  utils.to_numpy(out.argmax(dim = -1))
+                true    =  utils.to_numpy(label)
+                predicts += predict.tolist()
+                trues += true.tolist()
 
-            (recall,f1,accuracy) = utils.compute_metrics(true,predict)
-            val_log.update(
-                recall,
-                f1,
-                accuracy,
-                loss.item()
-            )
+                (recall,f1,accuracy) = utils.compute_metrics(true,predict)
+                val_log.update(
+                    recall,
+                    f1,
+                    accuracy,
+                    loss.item()
+                )
 
-        matrix = confusion_matrix(trues,predicts)
-        val_log.update_confusion_matrix(matrix)
-        table = Table(show_header=True, header_style="bold magenta")
-        table.add_column("Metrics", style="dim", width=12)
-        table.add_column(f"Train (Epoch = {epoch + 1})",justify="right")
-        table.add_column(f"Val (Epoch = {epoch + 1})",justify="right")
+            matrix = confusion_matrix(trues,predicts)
+            val_log.update_confusion_matrix(matrix)
+            table = Table(show_header=True, header_style="bold magenta")
+            table.add_column("Metrics", style="dim", width=12)
+            table.add_column(f"Train (Epoch = {epoch + 1})",justify="right")
+            table.add_column(f"Val (Epoch = {epoch + 1})",justify="right")
 
-        val_metrics = val_log.Average()
+            val_metrics = val_log.Average()
+            
+            train_metrics= train_log.Average()
+            val_metrics = list(map(lambda x : str(round(x,5)),val_metrics))
+            train_metrics = list(map(lambda x : str(round(x,5)),train_metrics))
+            metrics_name  = ['Recall',"F1-score","Accuracy","Loss"]
+
+            for col in zip(metrics_name,train_metrics,val_metrics):
+                table.add_row(*col)
+            console.print(table)
+            console.print("-"*30)
+            console.print("confusion_matrix")
+            console.print(matrix)
         
-        train_metrics= train_log.Average()
-        val_metrics = list(map(lambda x : str(round(x,5)),val_metrics))
-        train_metrics = list(map(lambda x : str(round(x,5)),train_metrics))
-        metrics_name  = ['Recall',"F1-score","Accuracy","Loss"]
-
-        for col in zip(metrics_name,train_metrics,val_metrics):
-            table.add_row(*col)
-        console.print(table)
-        console.print("-"*30)
-        console.print("confusion_matrix")
-        console.print(matrix)
+            network.train()
+            if float(val_metrics[2]) > best_acc:
+                best_acc = float(val_metrics[2])
+                torch.save(network.state_dict(),f"./log/models/{config.parameter['save_model']}.pth",)
         console.log(f"Epoch {epoch + 1} end ...")
-        network.train()
-        if float(val_metrics[2]) > best_acc:
-            best_acc = float(val_metrics[2])
-            torch.save(network.state_dict(),f"./log/models/{config.parameter['save_model']}.pth",)
 
     console.log("Save Log ...")
     train_log.to_csv("./log/train_log.csv")
