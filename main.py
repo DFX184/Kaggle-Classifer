@@ -19,6 +19,11 @@ from accelerate import Accelerator
 from sklearn.metrics import confusion_matrix
 import random
 import lossfunc
+from pytorch_lightning import Trainer, seed_everything
+from pytorch_lightning import Callback
+from pytorch_lightning.loggers import CSVLogger
+from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
+import pytorch_lightning as pl
 ######################################################
 #                                                    #
 #                                                    #
@@ -36,16 +41,58 @@ def seed_torch(seed):
 
 seed_torch(config.parameter['seed'])
 
-accelerator = Accelerator()
-
 # device = torch.device(config.parameter["device"])
-console.log(f"Use device {accelerator.device}")
+
+class LitCassava(pl.LightningModule):
+    def __init__(self, model):
+        super(LitCassava, self).__init__()
+        self.model = model
+        self.metric = pl.metrics.F1(num_classes=config.parameter['num_classes'])
+        self.criterion = lossfunc.FocalLoss()
+        self.lr = config.parameter['learning_rate']
+
+    def forward(self, x, *args, **kwargs):
+        return self.model(x)
+
+    def configure_optimizers(self):
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr)
+        scheduler_steplr = StepLR(self.optimizer, step_size=int(0.2 *config.parameter['epochs']), gamma=0.1)
+        self.scheduler   = scheduler_warmup = GradualWarmupScheduler(
+            self.optimizer, multiplier=1,
+            total_epoch=config.parameter['epochs'], 
+            after_scheduler=scheduler_steplr)
+
+        return {'optimizer': self.optimizer, 'lr_scheduler': self.scheduler}
+
+    def training_step(self, batch, batch_idx):
+        image = batch[0]
+        target = batch[1]
+        output = self.model(image)
+        loss = self.criterion(output, target)
+        score = self.metric(output.argmax(1), target)
+        logs = {'train_loss': loss, 'train_f1': score, 'lr': self.optimizer.param_groups[0]['lr']}
+        self.log_dict(
+            logs,
+            on_step=False, on_epoch=True, prog_bar=True, logger=True
+        )
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        image = batch[0]
+        target = batch[1]
+        output = self.model(image)
+        loss = self.criterion(output, target)
+        score = self.metric(output.argmax(1), target)
+        logs = {'valid_loss': loss, 'valid_f1': score}
+        self.log_dict(
+            logs,
+            on_step=False, on_epoch=True, prog_bar=True, logger=True
+        )
+        return loss
 
 
 if __name__ == "__main__":
     ## network
-    network = vit.Vit(config.parameter["in_channel"],
-                                config.parameter["num_classes"])
     # network = network.to(device)
 
     train_log = utils.ClassificationLog("Train Log")
@@ -53,100 +100,29 @@ if __name__ == "__main__":
     transform = vision_transforms.transform_3
 
     train_loader, val_loader = ap.create_dataloader(None, transform)
+
+    model = resnet.ResNet18(config.parameter['in_channel'],config.parameter['num_classes'])
+
+    lit_model = LitCassava(model)
     console.log("Use parameters as following:",config.parameter)
-    lossfunction = lossfunc.FocalLoss() #nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(
-        network.parameters(), lr=config.parameter['learning_rate'])
-    scheduler_steplr = StepLR(optimizer, step_size=int(0.2 * config.parameter['epochs']), gamma=0.1)
-    scheduler_warmup = GradualWarmupScheduler(
-        optimizer, multiplier=1,
-        total_epoch=config.parameter['epochs'], 
-        after_scheduler=scheduler_steplr)
-    network, optimizer, train_loader,val_loader = accelerator.prepare(network, optimizer, train_loader,val_loader)
+    
+    logger = CSVLogger(save_dir='log/', name=config.parameter['save_model'])
+    logger.log_hyperparams(config.parameter)
+    checkpoint_callback = ModelCheckpoint(monitor='valid_loss',
+                                        save_top_k=1,
+                                        save_last=True,
+                                        save_weights_only=True,
+                                        filename='checkpoint/{epoch:02d}-{valid_loss:.4f}-{valid_f1:.4f}',
+                                        verbose=False,
+                                        mode='min')
 
-
-    if not(os.path.exists("./log")):
-        os.mkdir("./log")
-        os.mkdir("./log/models/")
-
-    best_acc = 0.0
-    for epoch in range(config.parameter['epochs']):
-        bar  =track(train_loader,description=f"[blod red]Training Epoch : {epoch + 1} ")
-        train_log.reset()
-        for img,label in bar:
-            #img = img.to(device)
-            #label = label.to(device)
-            out   = network(img)
-            loss  = lossfunction(out,label)
-            predict =  utils.to_numpy(out.argmax(dim = -1))
-            true    =  utils.to_numpy(label)
-            
-            (recall,f1,accuracy) = utils.compute_metrics(true,predict)
-            train_log.update(
-                recall,
-                f1,
-                accuracy,
-                loss.item()
-            )
-
-            optimizer.zero_grad()
-            #loss.backward()
-            accelerator.backward(loss)
-            optimizer.step()
-        scheduler_warmup.step()
-        if (epoch + 1) % config.parameter["verbose_test"] == 0:
-            network.eval()
-            trues = []
-            predicts = []
-            bar = track(val_loader,description=f"[blod red]Testing Epoch : {epoch + 1} ")
-            val_log.reset()
-            for img,label in bar:
-                # img = img.to(device)
-                # label = label.to(device)
-                out   = network(img)
-                loss  = lossfunction(out,label)
-                predict =  utils.to_numpy(out.argmax(dim = -1))
-                true    =  utils.to_numpy(label)
-                predicts += predict.tolist()
-                trues += true.tolist()
-
-                (recall,f1,accuracy) = utils.compute_metrics(true,predict)
-                val_log.update(
-                    recall,
-                    f1,
-                    accuracy,
-                    loss.item()
-                )
-
-            matrix = confusion_matrix(trues,predicts)
-            val_log.update_confusion_matrix(matrix)
-            table = Table(show_header=True, header_style="bold magenta")
-            table.add_column("Metrics", style="dim", width=12)
-            table.add_column(f"Train (Epoch = {epoch + 1})",justify="right")
-            table.add_column(f"Val (Epoch = {epoch + 1})",justify="right")
-
-            val_metrics = val_log.Average()
-            
-            train_metrics= train_log.Average()
-            val_metrics = list(map(lambda x : str(round(x,5)),val_metrics))
-            train_metrics = list(map(lambda x : str(round(x,5)),train_metrics))
-            metrics_name  = ['Recall',"F1-score","Accuracy","Loss"]
-
-            for col in zip(metrics_name,train_metrics,val_metrics):
-                table.add_row(*col)
-            console.print(table)
-            console.print("-"*30)
-            console.print("confusion_matrix")
-            console.print(matrix)
-        
-            network.train()
-            if float(val_metrics[2]) > best_acc:
-                best_acc = float(val_metrics[2])
-                torch.save(network.state_dict(),f"./log/models/{config.parameter['save_model']}.pth",)
-        console.log(f"Epoch {epoch + 1} end ...")
-
-    console.log("Save Log ...")
-    train_log.to_csv("./log/train_log.csv")
-    val_log.to_csv("./log/val_log.csv")
-
-            
+    trainer = Trainer(
+        max_epochs=config.parameter['epochs'],
+        gpus=1,
+        accumulate_grad_batches=1,
+        precision=16,
+        checkpoint_callback=checkpoint_callback,
+        logger=logger,
+        weights_summary='top',
+    )
+    trainer.fit(lit_model, train_dataloader=train_loader, val_dataloaders=val_loader)
