@@ -5,7 +5,7 @@ parameter = {
     "dataset_csv": r"train.csv",
     "batch_size": 32,
     "num_workers" : 8,
-    "learning_rate" : 5e-4,
+    "learning_rate" : 1e-3,
     "val_size" : 0.2,
     "seed" : 12,
     "epochs":30,

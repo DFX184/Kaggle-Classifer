@@ -44,7 +44,7 @@ console.log(f"Use device {accelerator.device}")
 
 if __name__ == "__main__":
     ## network
-    network = resnet.ResNet18(config.parameter["in_channel"],
+    network = vit.Vit(config.parameter["in_channel"],
                                 config.parameter["num_classes"])
     # network = network.to(device)
 
