@@ -5,7 +5,7 @@ parameter = {
     "dataset_csv": r"train.csv",
     "batch_size": 32,
     "num_workers" : 8,
-    "learning_rate" : 5e-5,
+    "learning_rate" : 5e-4,
     "val_size" : 0.2,
     "seed" : 12,
     "epochs":30,
@@ -15,7 +15,6 @@ parameter = {
     "image_size" : (256,256),
     "save_model" : "ResNet__focal"
 }
-
 
 if __name__ == "__main__":
     print("paramters:",parameter)

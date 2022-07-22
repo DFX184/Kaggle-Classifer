@@ -72,6 +72,7 @@ if __name__ == "__main__":
     best_acc = 0.0
     for epoch in range(config.parameter['epochs']):
         bar  =track(train_loader,description=f"[blod red]Training Epoch : {epoch + 1} ")
+        train_log.reset()
         for img,label in bar:
             #img = img.to(device)
             #label = label.to(device)
@@ -98,6 +99,7 @@ if __name__ == "__main__":
             trues = []
             predicts = []
             bar = track(val_loader,description=f"[blod red]Testing Epoch : {epoch + 1} ")
+            val_log.reset()
             for img,label in bar:
                 # img = img.to(device)
                 # label = label.to(device)

@@ -15,7 +15,6 @@ from rich.table import Column, Table
 from torchvision import transforms
 from prefetch_generator import BackgroundGenerator
 import jpeg4py as jpeg
-from torchsampler import ImbalancedDatasetSampler
 import torchvision
 import numpy as np
 class DataLoaderX(DataLoader):
@@ -67,24 +66,24 @@ def create_dataloader(label_func = None,transform=None):
     class_sample_count = [4826, 4624, 3181, 1860, 1602, 1184, 686, 200, 165, 120, 97, 87]
     new_weights = torch.FloatTensor(class_sample_count)/sum(class_sample_count)
     sampler = torch.utils.data.sampler.WeightedRandomSampler(new_weights, 200 * config.parameter['batch_size'],replacement=True)
-    # train_loader = DataLoaderX(train_set,shuffle=True,
-    #                             batch_size =config.parameter['batch_size'],
-    #                             num_workers = config.parameter['num_workers'],
-    #                             pin_memory=True)
-    # val_loader   = DataLoaderX(val_set,shuffle=True,
-    #                             batch_size=config.parameter['batch_size'],
-    #                             num_workers = config.parameter['num_workers'],
-    #                             pin_memory=True)
-    train_loader_Weighted = DataLoaderX(train_set,shuffle=False,sampler = sampler,
-                                batch_size =config.parameter['batch_size'],
-                                num_workers = config.parameter['num_workers'],
-                                pin_memory=True)
-    val_loader_Weighted = DataLoaderX(val_set,shuffle=True,
-                                batch_size=config.parameter['batch_size'],
-                                num_workers = config.parameter['num_workers'],
-                                pin_memory=True)
-   # return train_loader,val_loader
-    return train_loader_Weighted,val_loader_Weighted
+    train_loader = DataLoaderX(train_set,shuffle=True,
+                                 batch_size =config.parameter['batch_size'],
+                                 num_workers = config.parameter['num_workers'],
+                                 pin_memory=True)
+    val_loader   = DataLoaderX(val_set,shuffle=True,
+                                 batch_size=config.parameter['batch_size'],
+                                 num_workers = config.parameter['num_workers'],
+                                 pin_memory=True)
+    #train_loader_Weighted = DataLoaderX(train_set,shuffle=False,sampler = sampler,
+    #                            batch_size =config.parameter['batch_size'],
+    #                            num_workers = config.parameter['num_workers'],
+    #                            pin_memory=True)
+    #val_loader_Weighted = DataLoaderX(val_set,shuffle=True,
+    #                            batch_size=config.parameter['batch_size'],
+    #                            num_workers = config.parameter['num_workers'],
+    #                            pin_memory=True)
+    return train_loader,val_loader
+    #return train_loader_Weighted,val_loader_Weighted
 
 if __name__ == "__main__":
     param = config.parameter

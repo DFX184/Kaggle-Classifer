@@ -22,9 +22,15 @@ class ClassificationLog(object):
         self.sum_acc  = 0.0
         self.sum_loss = 0.0
         self.sum_f1 = 0.0
-        self.n  = 1 
+        self.n  = 0
         self.confusion_matrix = None
-    
+    def reset(self):
+        self.sum_acc = 0.0
+        self.sum_recall = 0.0
+        self.sum_loss = 0.0
+        self.sum_f1 = 0.0
+        self.n = 0
+
     def Average(self):
         return [
             self.sum_recall/self.n,
