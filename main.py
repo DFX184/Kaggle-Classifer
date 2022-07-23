@@ -24,22 +24,11 @@ from pytorch_lightning import Callback
 from pytorch_lightning.loggers import CSVLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 import pytorch_lightning as pl
-######################################################
-#                                                    #
-#                                                    #
-######################################################
-def seed_torch(seed):
-    random.seed(seed)
-    os.environ['PYTHONHASHSEED'] = str(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed(seed)
-        torch.backends.cudnn.benchmark = False
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.enabled = False
+from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
+import torchmetrics
 
-seed_torch(config.parameter['seed'])
+
+seed_everything(config.parameter['seed'], workers=True)
 
 # device = torch.device(config.parameter["device"])
 
@@ -47,8 +36,10 @@ class LitCassava(pl.LightningModule):
     def __init__(self, model):
         super(LitCassava, self).__init__()
         self.model = model
-        self.metric = pl.metrics.F1(num_classes=config.parameter['num_classes'])
+        self.metric = torchmetrics.F1Score(num_classes=config.parameter['num_classes'])
+        self.accuracy_metric_1 = torchmetrics.Accuracy()
         self.criterion = lossfunc.FocalLoss()
+        self.accuracy_metric_3 = torchmetrics.Accuracy(top_k=3)
         self.lr = config.parameter['learning_rate']
 
     def forward(self, x, *args, **kwargs):
@@ -56,11 +47,9 @@ class LitCassava(pl.LightningModule):
 
     def configure_optimizers(self):
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr)
-        scheduler_steplr = StepLR(self.optimizer, step_size=int(0.2 *config.parameter['epochs']), gamma=0.1)
-        self.scheduler   = scheduler_warmup = GradualWarmupScheduler(
-            self.optimizer, multiplier=1,
-            total_epoch=config.parameter['epochs'], 
-            after_scheduler=scheduler_steplr)
+        self.scheduler = LinearWarmupCosineAnnealingLR(self.optimizer,
+         warmup_epochs=config.parameter['epochs']//3, 
+        max_epochs=config.parameter['epochs'])
 
         return {'optimizer': self.optimizer, 'lr_scheduler': self.scheduler}
 
@@ -70,7 +59,15 @@ class LitCassava(pl.LightningModule):
         output = self.model(image)
         loss = self.criterion(output, target)
         score = self.metric(output.argmax(1), target)
-        logs = {'train_loss': loss, 'train_f1': score, 'lr': self.optimizer.param_groups[0]['lr']}
+        acc_1   = self.accuracy_metric_1(output.argmax(1), target)
+        acc_3   = self.accuracy_metric_3(output.softmax(1), target)
+        logs = {'train_loss': loss, 
+            'train_f1': score, 
+            'lr': self.optimizer.param_groups[0]['lr'],
+             "train_accuracy(top_1)" : acc_1,
+             "train_accuracy(top_3)" : acc_3
+             }
+             
         self.log_dict(
             logs,
             on_step=False, on_epoch=True, prog_bar=True, logger=True
@@ -83,7 +80,14 @@ class LitCassava(pl.LightningModule):
         output = self.model(image)
         loss = self.criterion(output, target)
         score = self.metric(output.argmax(1), target)
-        logs = {'valid_loss': loss, 'valid_f1': score}
+        acc_1   = self.accuracy_metric_1(output.argmax(1), target)
+        acc_3   = self.accuracy_metric_3(output.softmax(1), target)
+        logs = {
+            'valid_loss': loss, 
+            'valid_f1': score,
+            "valid_accuracy(top_1)" : acc_1,
+            "valid_accuracy(top_3)" : acc_3
+        }
         self.log_dict(
             logs,
             on_step=False, on_epoch=True, prog_bar=True, logger=True
@@ -94,18 +98,19 @@ class LitCassava(pl.LightningModule):
 if __name__ == "__main__":
     ## network
     # network = network.to(device)
-
     train_log = utils.ClassificationLog("Train Log")
     val_log = utils.ClassificationLog("Val Log")
     transform = vision_transforms.transform_3
 
     train_loader, val_loader = ap.create_dataloader(None, transform)
 
-    model = resnet.ResNet18(config.parameter['in_channel'],config.parameter['num_classes'])
+    model = resnet.ResNet(config.parameter['in_channel'],
+                                config.parameter['num_classes'])
 
     lit_model = LitCassava(model)
+
     console.log("Use parameters as following:",config.parameter)
-    
+
     logger = CSVLogger(save_dir='log/', name=config.parameter['save_model'])
     logger.log_hyperparams(config.parameter)
     checkpoint_callback = ModelCheckpoint(monitor='valid_loss',
@@ -125,4 +130,6 @@ if __name__ == "__main__":
         logger=logger,
         weights_summary='top',
     )
-    trainer.fit(lit_model, train_dataloader=train_loader, val_dataloaders=val_loader)
+    trainer.fit(lit_model, 
+    train_loader, 
+    val_loader)

@@ -8,13 +8,12 @@ parameter = {
     "learning_rate" : 5e-4,
     "val_size" : 0.2,
     "seed" : 12,
-    "epochs":10,
+    "epochs":20,
     "num_classes" : 12,
     "in_channel" : 3,
     "image_size" : (256,256),
-    "save_model" : "Effect"
+    "save_model" : "resnet34"
 }
-
 
 if __name__ == "__main__":
     print("paramters:",parameter)
