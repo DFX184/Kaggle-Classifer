@@ -1,10 +1,14 @@
 from torchvision.models import resnet18
 import config
 import torch.nn as nn
-class ResNet18(nn.Module):
+import timm
+class ResNet(nn.Module):
     def __init__(self,in_channel,num_classes):
         super().__init__()
-        self.res_net = resnet18(weights="IMAGENET1K_V1")
-        self.res_net.fc = nn.Linear(512,num_classes)
-    def forward(self,x):
-        return self.res_net(x)
+        self.model = timm.create_model("resnet34", pretrained=True)
+        in_features = self.model.get_classifier().in_features
+        self.model.fc = nn.Linear(in_features,num_classes)
+
+    def forward(self, x):
+        x = self.model(x)
+        return x
