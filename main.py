@@ -4,7 +4,7 @@ import utils
 import os
 import torch
 import numpy as np
-from models import densenet,tony_net,resnet,effectNet,vit
+from models import densenet,tony_net,resnet,effectNet,vit,patch_vit
 from rich import print
 import vision_transforms
 from torch.optim.lr_scheduler import StepLR, ExponentialLR
@@ -98,14 +98,12 @@ class LitCassava(pl.LightningModule):
 if __name__ == "__main__":
     ## network
     # network = network.to(device)
-    train_log = utils.ClassificationLog("Train Log")
-    val_log = utils.ClassificationLog("Val Log")
     transform = vision_transforms.transform_3
 
     train_loader, val_loader = ap.create_dataloader(None, transform)
 
-    model = resnet.ResNet(config.parameter['in_channel'],
-                                config.parameter['num_classes'])
+    model = patch_vit.PatchSmallVit(config.parameter['in_channel'],
+                               config.parameter['num_classes'])
 
     lit_model = LitCassava(model)
 
@@ -128,7 +126,7 @@ if __name__ == "__main__":
         precision=16,
         checkpoint_callback=checkpoint_callback,
         logger=logger,
-        weights_summary='top',
+        weights_summary='top'
     )
     trainer.fit(lit_model, 
     train_loader, 

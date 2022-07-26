@@ -31,15 +31,9 @@ class ImageDataset(Dataset):
         self.transform = transform
         if not(label_func is None):
             self.labels = list(map(label_func,self.labels))
-        
     def __getitem__(self,index):
         path= os.path.join(self.root,self.images[index])
-        #img = cv.imread(path)
-
         img = jpeg.JPEG(path).decode()
-       # img  = torchvision.io.read_image(path).numpy()
-        #img  = np.transpose(img,(2,1,0))
-        #img = Image.fromarray(img)
         label = self.labels[index]
         if not(self.transform is None):
             img = self.transform(image = img)['image']

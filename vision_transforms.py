@@ -63,11 +63,10 @@ transform_2 = Compose([
 
 transform_3 = Compose(
     [
-        A.Lambda(transform_hist_equality),
+        A.CLAHE(),
         A.Resize(height=256, width=256),
         A.ShiftScaleRotate(p=0.5),
         A.RandomBrightnessContrast(p=0.5),
-        A.CLAHE(),
         A.CenterCrop(height = 224,width = 224),
         A.Normalize(),
         ToTensorV2(),
