@@ -21,11 +21,19 @@ else
     echo "CUDA is not available"
 fi
 
-
-pip3 install opencv-python
-pip3 install rich
-pip3 install git+https://github.com/ildoonet/pytorch-gradual-warmup-lr.git
-
-pip3 install accelerate
-pip3 install prefetch_generator 
-pip3 install -U albumentations
+pip install rich
+pip install -U torchvision 
+pip install sympy 
+pip install timm 
+pip install efficientnet_pytorch 
+pip install -U albumentations 
+pip install -U opencv-python 
+pip install warmup_scheduler 
+pip install prefetch_generator 
+pip install jpeg4py 
+sudo apt-get install libturbojpeg
+pip install accelerate 
+pip install -U pytorch-lightning 
+pip install pytorch-lightning-bolts 
+pip install wandb 
+pip install gym 
